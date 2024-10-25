@@ -366,14 +366,15 @@ let main c =
        | Ok c ->  c
        | Error err -> C.die "%s" err)
   in
-  let cflags =
+  let cflags, extra_libs =
     match C.ocaml_config_var c "ccomp_type" with
-    | Some "cc" -> "-Wno-deprecated-declarations" :: cflags
-    | _ -> cflags
+    | Some "cc" -> "-Wno-deprecated-declarations" :: cflags, []
+    | Some "msvc" -> cflags, ["-defaultlib"; "ws2_32.lib"]
+    | _ -> cflags, []
   in
   C.C_define.gen_header_file c ~fname:"config.h" (extract_declarations c ~cflags ~libs);
   C.Flags.write_sexp "cflags.sexp" cflags;
-  C.Flags.write_sexp "clibs.sexp" libs
+  C.Flags.write_sexp "clibs.sexp" (libs @ extra_libs)
 
 let () =
   C.main ~name:"ocurl" main
